@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  psql-db2:
+    image: postgres
+    container_name: psql-db2
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=library-services
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d library-services" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  library-management:
+    container_name: library-services
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8083:8082'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://psql-db2:5433/library-services
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=1234
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      psql-db2:
+        condition: service_healthy
+    command: [ "./wait-for-it.sh", "psql-db2:5433", "--", "java", "-jar", "application.jar" ]
+
+    volumes:
+      - ./src:/app

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Author</title>
+  <link rel="stylesheet" href="/webjars/bootstrap/5.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/webjars/bootstrap-icons/1.9.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div th:insert="~{fragments/header :: header}"></div>
+<div class="container mt-5">
+  <div class="card  col-md-8 offset-md-2">
+    <div class="card-body">
+      <div class="card-title text-center fw-light">
+        <a href="" class="link-secondary">Insert a new Author</a>
+      </div>
+      <div class="container my-5 mb-0">
+        <div class="col-md-12">
+          <form class="row g-3" id="addAuthorForm">
+            <div class="col-md-12">
+              <label class="fw-light form-label">Author Name</label>
+              <input type="text" class="form-control fw-light" id="authorName" required/>
+            </div>
+            <div class="form-floating col-12">
+              <textarea class="form-control fw-light" id="authorDescription" required></textarea>
+              <label for="authorDescription" class="fw-light">Author Description</label>
+            </div>
+            <div class="d-grid gap-2 mt-5 col-6 mx-auto">
+              <button class="btn btn-outline-success" type="submit">Insert a new Author</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+  document.getElementById('addAuthorForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('authorName').value;
+    const description = document.getElementById('authorDescription').value;
+
+    const requestBody = {
+      name: name,
+      description: description
+    };
+
+    sendAuthenticatedRequest('/authors', 'POST', requestBody)
+            .then(response => {
+              console.log('Author added successfully:', response);
+              window.location.href = "/authors"; // Điều hướng đến trang danh sách tác giả sau khi thêm thành công
+            })
+            .catch(error => console.error('Error:', error));
+  });
+
+  function sendAuthenticatedRequest(url, method, body) {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.error('No JWT token found in localStorage');
+      window.location.href = "/login"; // Điều hướng đến trang đăng nhập nếu không có token
+      return Promise.reject('No JWT token found');
+    }
+
+    return fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(body)
+    })
+            .then(response => {
+              if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                  console.error('Unauthorized or Forbidden');
+                  window.location.href = "/login"; // Điều hướng đến trang đăng nhập nếu bị từ chối truy cập
+                }
+                return response.json().then(err => { throw err; });
+              }
+              return response.json();
+            })
+            .catch(error => console.error('Error:', error));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Ignore system files and directories
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Ignore directories
+/OneDrive/
+*.lnk
+/Downloads/
+node_modules/
+build/
+dist/
+target/
+.vscode/
+
+# Ignore specific file types
+*.class
+*.pyc
+*.o
+*.out
+*.jar
+*.swp
+*.swo

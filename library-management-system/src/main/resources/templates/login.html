@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/webjars/bootstrap-icons/1.9.1/font/bootstrap-icons.css">
+</head>
+<body>
+<div th:insert="~{fragments/header :: header}"></div>
+
+<div class="container mt-5">
+    <div class="card col-md-6 offset-md-3">
+        <div class="card-body">
+            <div class="card-title text-center fw-light">
+                <h2>Login</h2>
+            </div>
+            <div class="container my-5 mb-0">
+                <div class="col-md-12">
+                    <form class="row g-3" id="loginForm">
+                        <div class="col-md-12">
+                            <label for="username" class="fw-light form-label">Username</label>
+                            <input type="text" class="form-control fw-light" id="username" name="username" required autofocus="autofocus">
+                        </div>
+                        <div class="col-md-12">
+                            <label for="password" class="fw-light form-label">Password</label>
+                            <input type="password" class="form-control fw-light" id="password" name="password" required autofocus="autofocus">
+                        </div>
+                        <div class="d-grid gap-2 mt-5 col-6 mx-auto">
+                            <button type="submit" name="login" id="login" class="btn btn-success">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        fetch('/auth/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, password: password })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.authenticated) {
+                    const token = data.token;
+                    localStorage.setItem('jwtToken', token); // Lưu token vào localStorage
+                    window.location.href = "/"; // Chuyển hướng về trang chính (index)
+                } else {
+                    console.error('Authentication failed');
+                    alert('Authentication failed');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Xử lý đăng xuất
+    function handleLogout() {
+        localStorage.removeItem('jwtToken');
+        window.location.href = "/login";
+    }
+</script>
+
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
