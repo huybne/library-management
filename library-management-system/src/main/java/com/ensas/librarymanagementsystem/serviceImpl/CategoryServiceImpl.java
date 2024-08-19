@@ -24,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
         keyword = keyword + "%";
         return categoryRepository.findByName(keyword, PageRequest.of(page, size));    }
 
+
     @Override
     public Category getCategory(Long id) {
         return categoryRepository.findById(id).orElseThrow(()->
@@ -50,7 +51,7 @@ categoryRepository.deleteById(id);
 
     @Override
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        return categoryRepository.findAllSortedByName();
     }
 
     @Override

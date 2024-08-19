@@ -2,13 +2,17 @@ package com.ensas.librarymanagementsystem.serviceImpl;
 
 import com.ensas.librarymanagementsystem.Model.security.Role;
 import com.ensas.librarymanagementsystem.Model.security.User;
+import com.ensas.librarymanagementsystem.dto.request.ChangePasswordRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserCreationRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserUpdateRequest;
 import com.ensas.librarymanagementsystem.dto.response.UserResponse;
+import com.ensas.librarymanagementsystem.exceptions.NotFoundException;
 import com.ensas.librarymanagementsystem.exceptions.UserNotFoundException;
+import com.ensas.librarymanagementsystem.mapper.RoleMapper;
 import com.ensas.librarymanagementsystem.mapper.UserMapper;
 import com.ensas.librarymanagementsystem.repositories.RoleRepository;
 import com.ensas.librarymanagementsystem.repositories.UserRepository;
+import com.ensas.librarymanagementsystem.service.RoleService;
 import com.ensas.librarymanagementsystem.service.UserService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
@@ -30,8 +34,10 @@ public class UserServiceImpl implements UserService {
         private final PasswordEncoder passwordEncoder;
         private final RoleRepository roleRepository;
         private final UserMapper userMapper;
+    private final RoleService roleService;
+    private final RoleMapper roleMapper;
 
-        @Override
+    @Override
         public UserResponse getUser(UUID id){
             return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(() -> new RuntimeException("user not found")));
         }
@@ -51,8 +57,12 @@ public class UserServiceImpl implements UserService {
             User user= userMapper.toUser(request);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-            if (user.getRoles() == null) {
-                user.setRoles(new HashSet<>());
+            if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                Role defaultRole = roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Default role not found"));
+                Set<Role> roles = new HashSet<>();
+                roles.add(defaultRole);
+                user.setRoles(roles);
             }
             user = userRepository.save(user);
             return userMapper.toUserResponse(user);
@@ -85,7 +95,6 @@ public class UserServiceImpl implements UserService {
     public UserResponse UpdateUser(UUID userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User does not exist"));
 
-        // Update user's fields if they are not null or empty in the request
 
         if(StringUtils.isNotBlank(request.getFirstName())){
             user.setFirstName(request.getFirstName());
@@ -102,9 +111,9 @@ public class UserServiceImpl implements UserService {
         if(StringUtils.isNotBlank(request.getAddress())){
             user.setAddress(request.getAddress());
         }
-        if(StringUtils.isNotBlank(request.getPassword())){
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
+//        if(StringUtils.isNotBlank(request.getPassword())){
+//            user.setPassword(passwordEncoder.encode(request.getPassword()));
+//        }
         if (request.getCreatedDate() != null) {
             user.setCreatedDate(request.getCreatedDate());
         }
@@ -113,35 +122,49 @@ public class UserServiceImpl implements UserService {
         }
 
         // Update roles if provided in the request
-        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-            List<Role> roles = roleRepository.findAllById(request.getRoles().stream().map(UUID::fromString).collect(Collectors.toList()));
-            user.setRoles(new HashSet<>(roles));
-        }
+//        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+//            List<Role> roles = roleRepository.findAllById(request.getRoles().stream().map(UUID::fromString).collect(Collectors.toList()));
+//            user.setRoles(new HashSet<>(roles));
+//        }
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
+    @Override
+    public void changePassword(UUID userId, ChangePasswordRequest changePasswordRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(changePasswordRequest.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect");
+        }
+
+        // Xác nhận mật khẩu mới không trùng với mật khẩu cũ
+        if (passwordEncoder.matches(changePasswordRequest.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be the same as the old password");
+        }
+
+        // Đổi mật khẩu mới
+        user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
+        userRepository.save(user);
+    }
     @Override
         public void addRolesToUser(UUID uuid, List<Role> roles) {
             if (roles != null && !roles.isEmpty()) {
                 User user = userRepository.findById(uuid).orElseThrow(() -> new RuntimeException("User not found"));
                 Set<Role> userRoles = user.getRoles();
 
-                // Kiểm tra null trước khi sử dụng stream()
                 if (userRoles == null) {
                     userRoles = new HashSet<>();
                     user.setRoles(userRoles);
                 }
 
-                // Lấy danh sách tên các role hiện có
                 Set<String> roleNames = userRoles.stream().map(Role::getName).collect(Collectors.toSet());
 
-                // Lọc các role mới để thêm vào user
                 List<Role> rolesToAdd = roles.stream()
                         .filter(role -> !roleNames.contains(role.getName()))
                         .toList();
 
-                // Thêm các role mới vào user
                 userRoles.addAll(rolesToAdd);
                 userRepository.save(user);
             }

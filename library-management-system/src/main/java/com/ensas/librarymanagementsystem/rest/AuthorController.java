@@ -2,6 +2,7 @@ package com.ensas.librarymanagementsystem.rest;
 
 import com.ensas.librarymanagementsystem.Model.Book;
 import com.ensas.librarymanagementsystem.Model.Author;
+import com.ensas.librarymanagementsystem.Model.Category;
 import com.ensas.librarymanagementsystem.service.AuthorService;
 import com.ensas.librarymanagementsystem.util.GeneratePagination;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -39,7 +41,11 @@ public class AuthorController {
         response.put("currentPage", page);
         return ResponseEntity.ok(response);
     }
-
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllAuthors() {
+        List<Author> authors = authorService.getAllAuthors();
+        return ResponseEntity.ok(authors);
+    }
     @GetMapping("/{id}")
     public ResponseEntity<?> getAuthor(@PathVariable("id") Long id) {
         Author author = authorService.getAuthor(id);

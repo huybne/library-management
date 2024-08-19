@@ -1,6 +1,5 @@
 package com.ensas.librarymanagementsystem.dto.request;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +22,5 @@ public class UserCreationRequest {
     private String address;
     private LocalDate createdDate;
     private LocalDate lastModifiedDate;
+    private String Role;
 }

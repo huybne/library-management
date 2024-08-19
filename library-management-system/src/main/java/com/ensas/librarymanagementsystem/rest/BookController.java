@@ -2,6 +2,8 @@ package com.ensas.librarymanagementsystem.rest;
 
 import com.ensas.librarymanagementsystem.Model.Book;
 import com.ensas.librarymanagementsystem.Model.Borrow;
+import com.ensas.librarymanagementsystem.dto.request.BookUpdateRequest;
+import com.ensas.librarymanagementsystem.dto.response.BookResponse;
 import com.ensas.librarymanagementsystem.service.AuthorService;
 import com.ensas.librarymanagementsystem.service.BookService;
 import com.ensas.librarymanagementsystem.service.CategoryService;
@@ -31,7 +33,7 @@ public class BookController {
     public ResponseEntity<?> getBooks(@RequestParam(name = "keyword", defaultValue = "") String keyword,
                                       @RequestParam(name ="page", defaultValue = "0") int page,
                                       @RequestParam(name ="size", defaultValue = "5") int size) {
-        Page<Book> bookPage = bookService.getBooks(keyword, page, size);
+        Page<BookResponse> bookPage = bookService.getBooks(keyword, page, size);
         Map<String, Object> response = new HashMap<>();
         response.put("books", bookPage.getContent());
         response.put("pagination", generatePagination.pagination(page));
@@ -93,12 +95,12 @@ public class BookController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateBook(@PathVariable("id") Long id, @Valid @RequestBody Book book,
+    public ResponseEntity<?> updateBook(@PathVariable("id") Long id, @Valid @RequestBody BookUpdateRequest book,
                                         BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
-        Book updatedBook = bookService.updateBook(id, book);
+        BookResponse updatedBook = bookService.updateBook(id, book);
         return ResponseEntity.ok(updatedBook);
     }
 

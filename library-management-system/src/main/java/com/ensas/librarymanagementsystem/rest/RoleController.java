@@ -71,4 +71,14 @@ public class RoleController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @GetMapping("/name/{roleName}")
+    public ResponseEntity<RoleResponse> getRoleByName(@PathVariable String roleName) {
+        try {
+            RoleResponse response = roleService.getRoleByName(roleName);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching role by name {}: {}", roleName, e.getMessage(), e);
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 }

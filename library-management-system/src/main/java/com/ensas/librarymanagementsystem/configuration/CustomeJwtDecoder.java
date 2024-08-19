@@ -3,7 +3,6 @@ package com.ensas.librarymanagementsystem.configuration;
 import com.ensas.librarymanagementsystem.dto.request.VerifyRequest;
 import com.ensas.librarymanagementsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
-import org.aspectj.weaver.ast.Var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

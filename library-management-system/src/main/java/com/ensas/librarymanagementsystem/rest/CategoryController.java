@@ -8,10 +8,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,7 +39,17 @@ public class CategoryController {
         response.put("currentPage", page);
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCategory(@PathVariable("id") Long id) {
+        Category category = categoryService.getCategory(id);
+        return ResponseEntity.ok(category);
+    }
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(categories);
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable("id") Long id,
                                             @RequestParam(name = "keyword",defaultValue = "") String keyword,

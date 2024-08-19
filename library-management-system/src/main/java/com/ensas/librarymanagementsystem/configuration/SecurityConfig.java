@@ -2,6 +2,7 @@ package com.ensas.librarymanagementsystem.configuration;
 
 import com.ensas.librarymanagementsystem.serviceImpl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +32,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
 //           "/users",
             "/auth/token", "/auth/verify" ,"/auth/logout", "/auth/refresh",
-            "/users",
+            "/users/create",
     };
     private final String[] PUBLIC = {
             "/messages",
@@ -43,7 +44,7 @@ public class SecurityConfig {
         return new CustomUserDetailsService();
     }
 
-
+    @Autowired
     private CustomeJwtDecoder customeJwtDecoder;
 
     @Bean
@@ -61,13 +62,7 @@ public class SecurityConfig {
                                 .requestMatchers("/authors/**", "/books/**", "/categories/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-//                .formLogin(login -> login
-//                        .loginPage("/login")
-//                        .loginProcessingUrl("/auth/login")
-//                        .defaultSuccessUrl("/login?success=true", true)
-//                        .usernameParameter("username")
-//                        .passwordParameter("password")
-//                        .failureUrl("/login?error=true"))
+
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwtConfigurer -> jwtConfigurer
                                 .decoder(customeJwtDecoder)

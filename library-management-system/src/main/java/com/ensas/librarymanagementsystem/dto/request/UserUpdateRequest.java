@@ -17,10 +17,10 @@ public class UserUpdateRequest {
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
+   // private String password;
     private String telephone;
     private String address;
     private LocalDate createdDate;
     private LocalDate lastModifiedDate;
-    List<String> roles;
+   // List<String> roles;
 }
