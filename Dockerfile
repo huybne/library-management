@@ -1,6 +1,6 @@
 
 FROM maven:4.0.0-openjdk:17 AS build
-COPY . .
+COPY library-management-system .
 RUN mvn clean package -DskipTests
 
 
