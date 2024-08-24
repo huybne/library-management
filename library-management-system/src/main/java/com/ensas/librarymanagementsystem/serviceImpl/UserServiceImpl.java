@@ -8,20 +8,21 @@ import com.ensas.librarymanagementsystem.dto.request.UserUpdateRequest;
 import com.ensas.librarymanagementsystem.dto.response.UserResponse;
 import com.ensas.librarymanagementsystem.exceptions.NotFoundException;
 import com.ensas.librarymanagementsystem.exceptions.UserNotFoundException;
-import com.ensas.librarymanagementsystem.mapper.RoleMapper;
 import com.ensas.librarymanagementsystem.mapper.UserMapper;
 import com.ensas.librarymanagementsystem.repositories.RoleRepository;
 import com.ensas.librarymanagementsystem.repositories.UserRepository;
-import com.ensas.librarymanagementsystem.service.RoleService;
 import com.ensas.librarymanagementsystem.service.UserService;
 import io.micrometer.common.util.StringUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,13 +35,25 @@ public class UserServiceImpl implements UserService {
         private final PasswordEncoder passwordEncoder;
         private final RoleRepository roleRepository;
         private final UserMapper userMapper;
-    private final RoleService roleService;
-    private final RoleMapper roleMapper;
+//    private final RoleService roleService;
+//    private final RoleMapper roleMapper;
 
     @Override
         public UserResponse getUser(UUID id){
             return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(() -> new RuntimeException("user not found")));
         }
+        @Transactional
+        @Override
+        public Page<UserResponse> getAllUsers(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        String keywordWithWildcard = "%" + keyword.toLowerCase() + "%";
+        Page<User> userPage = userRepository.findAllSort(keywordWithWildcard, pageable);
+
+        Page<UserResponse> user = userPage.map(userMapper::toUserResponse);
+
+        return user;
+    }
         @Transactional
         @Override
         public List<UserResponse> getUsers() {

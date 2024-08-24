@@ -2,6 +2,7 @@ package com.ensas.librarymanagementsystem.service;
 
 
 import com.ensas.librarymanagementsystem.dto.request.AddAuthoritiesToRole;
+import com.ensas.librarymanagementsystem.dto.request.AddRoleToUser;
 import com.ensas.librarymanagementsystem.dto.request.RoleRequest;
 import com.ensas.librarymanagementsystem.dto.response.RoleResponse;
 
@@ -25,4 +26,6 @@ public interface RoleService {
     RoleResponse getRoleByName(String name);
 
     RoleResponse updateRole(UUID roleId, RoleRequest request);
+
+    RoleResponse addRoleToUser(AddRoleToUser request);
 }

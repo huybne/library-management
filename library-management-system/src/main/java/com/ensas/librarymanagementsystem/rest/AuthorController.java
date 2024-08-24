@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,12 +54,14 @@ public class AuthorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteAuthor(@PathVariable("id") Long id) {
         authorService.deleteAuthor(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/books")
+
     public ResponseEntity<?> getAuthorBooks(@PathVariable("id") Long id,
                                             @RequestParam(name = "keyword", defaultValue = "") String keyword,
                                             @RequestParam(name = "page", defaultValue = "0") int page,
@@ -76,6 +79,7 @@ public class AuthorController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> saveAuthor(@Valid @RequestBody Author author, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
@@ -84,12 +88,10 @@ public class AuthorController {
         return ResponseEntity.ok(savedAuthor);
     }
 
-    @GetMapping("/add-author")
-    public ResponseEntity<?> addAuthor() {
-        return ResponseEntity.ok(new Author());
-    }
+
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateAuthor(@PathVariable("id") Long id,
                                           @Valid @RequestBody Author author,
                                           BindingResult bindingResult) {

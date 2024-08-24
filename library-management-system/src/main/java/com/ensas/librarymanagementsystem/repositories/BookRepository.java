@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Pageable;
 @Repository
-
 public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("SELECT b FROM Book b WHERE LOWER(b.name) LIKE :name ORDER BY b.name ASC")
     Page<Book> findBookByName(@Param("name") String name, Pageable pageable);

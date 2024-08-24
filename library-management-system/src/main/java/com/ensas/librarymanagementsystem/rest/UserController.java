@@ -1,35 +1,45 @@
 package com.ensas.librarymanagementsystem.rest;
 
 import com.ensas.librarymanagementsystem.Model.security.Role;
+import com.ensas.librarymanagementsystem.configuration.ActiveUserStore;
 import com.ensas.librarymanagementsystem.dto.request.ChangePasswordRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserCreationRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserUpdateRequest;
 import com.ensas.librarymanagementsystem.dto.response.UserResponse;
 import com.ensas.librarymanagementsystem.repositories.RoleRepository;
 import com.ensas.librarymanagementsystem.serviceImpl.UserServiceImpl;
+import com.ensas.librarymanagementsystem.util.GeneratePagination;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("users")
 public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     @Autowired
+    private ActiveUserStore activeUserStore;
+
+    @Autowired
     private UserServiceImpl userService;
+
+    private final GeneratePagination generatePagination;
 
     @Autowired
     private RoleRepository roleRepository;
+
+    public UserController(GeneratePagination generatePagination) {
+        this.generatePagination = generatePagination;
+    }
+
     @PostMapping("create")
   //  @PreAuthorize("hasRole('ADMIN')")
 
@@ -43,13 +53,41 @@ public class UserController {
         return userService.createUser(request);
     }
 
+//    @GetMapping
+//    public ResponseEntity<?> getBooks(@RequestParam(name = "keyword", defaultValue = "") String keyword,
+//                                      @RequestParam(name ="page", defaultValue = "0") int page,
+//                                      @RequestParam(name ="size", defaultValue = "5") int size) {
+//        Page<BookResponse> bookPage = bookService.getBooks(keyword, page, size);
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("books", bookPage.getContent());
+//        response.put("pagination", generatePagination.pagination(page));
+//        response.put("totalPages", bookPage.getTotalPages());
+//        response.put("totalElements", bookPage.getTotalElements());
+//        response.put("keyword", keyword);
+//        response.put("currentSize", size);
+//        response.put("currentPage", page);
+//        return ResponseEntity.ok(response);
+//    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public List<UserResponse> getAllUsers() {
+    public ResponseEntity<Map<String, Object>> getAllUsers(@RequestParam(name = "keyword", defaultValue = "") String keyword,
+                                                           @RequestParam(name ="page", defaultValue = "0") int page,
+                                                           @RequestParam(name ="size", defaultValue = "100") int size) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         log.info("username : {}", authentication.getName());
         authentication.getAuthorities().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
-        return userService.getUsers();
+        Page<UserResponse> userPage = userService.getAllUsers(keyword, page, size);
+        Map<String, Object> response = new HashMap<>();
+        response.put("users", userPage.getContent());
+        response.put("pagination", generatePagination.pagination(page));
+        response.put("totalPages", userPage.getTotalPages());
+        response.put("totalElements", userPage.getTotalElements());
+        response.put("keyword", keyword);
+        response.put("currentSize", size);
+        response.put("currentPage", page);
+        return ResponseEntity.ok(response);
+
     }
 
     @GetMapping("/{id}")
@@ -97,4 +135,13 @@ public class UserController {
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add roles to the user: " + e.getMessage());
 //        }
 //    }
+@GetMapping("/activeUsers")
+public List<String> getActiveUsers() {
+    return activeUserStore.users;
+}
+
+    @GetMapping("/activeUserCount")
+    public int getActiveUserCount() {
+        return activeUserStore.users.size();
+    }
 }

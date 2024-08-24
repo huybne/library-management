@@ -6,6 +6,7 @@ import com.ensas.librarymanagementsystem.dto.request.ChangePasswordRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserCreationRequest;
 import com.ensas.librarymanagementsystem.dto.request.UserUpdateRequest;
 import com.ensas.librarymanagementsystem.dto.response.UserResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,9 @@ public interface UserService {
     void deleteUser(UUID userid);
     UserResponse getUser(UUID userId);
     List<UserResponse> getUsers();
+
+    Page<UserResponse> getAllUsers(String keyword, int page, int size);
+
     UserResponse createUser(UserCreationRequest request);
     User saveUser(User user);
 

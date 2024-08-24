@@ -4,6 +4,7 @@ import com.ensas.librarymanagementsystem.Model.Book;
 import com.ensas.librarymanagementsystem.Model.Borrow;
 import com.ensas.librarymanagementsystem.dto.request.BookUpdateRequest;
 import com.ensas.librarymanagementsystem.dto.response.BookResponse;
+import com.ensas.librarymanagementsystem.dto.response.GroupedBorrowedBooksResponse;
 import com.ensas.librarymanagementsystem.service.AuthorService;
 import com.ensas.librarymanagementsystem.service.BookService;
 import com.ensas.librarymanagementsystem.service.CategoryService;
@@ -18,7 +19,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,9 +65,10 @@ public class BookController {
     }
 
     @GetMapping("/borrowed-books")
+ //   @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getBorrowed(@RequestParam(name = "keyword", defaultValue = "") String keyword,
                                          @RequestParam(name ="page", defaultValue = "0") int page,
-                                         @RequestParam(name ="size", defaultValue = "5") int size) {
+                                         @RequestParam(name ="size", defaultValue = "10") int size) {
         Page<Borrow> borrowedBooks = bookService.getBorrowedBooks(keyword, page, size);
         Map<String, Object> response = new HashMap<>();
         response.put("borrows", borrowedBooks.getContent());
@@ -75,6 +80,88 @@ public class BookController {
         response.put("currentPage", page);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/grouped")
+    public ResponseEntity<Page<GroupedBorrowedBooksResponse>> getAllGroupedBorrows(
+            @RequestParam(name = "keyword", defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<GroupedBorrowedBooksResponse> groupedBorrows = bookService.getAllGroupedBorrows(keyword,page, size);
+        Map<String, Object> response = new HashMap<>();
+        response.put("borrows", groupedBorrows.getContent());
+        response.put("pagination", generatePagination.pagination(page));
+        response.put("totalPages", groupedBorrows.getTotalPages());
+        response.put("totalElements", groupedBorrows.getTotalElements());
+        response.put("keyword", keyword);
+        response.put("currentSize", size);
+        response.put("currentPage", page);
+        return ResponseEntity.ok(groupedBorrows);
+    }
+
+//    @GetMapping("/all-borrowed-books")
+//    public ResponseEntity<Page<Borrow>> getAllBorrowedBooks(@RequestParam(name = "keyword", defaultValue = "") String keyword,
+//                                                            @RequestParam (name = "page", defaultValue = "0") int page,
+//                                                            @RequestParam(name = "size", defaultValue = "10") int size) {
+//        Page<Borrow> borrowedBooks = bookService.getAllB(keyword, page, size);
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("borrows", borrowedBooks.getContent());
+//        response.put("pagination", generatePagination.pagination(page));
+//        response.put("totalPages", borrowedBooks.getTotalPages());
+//        response.put("totalElements", borrowedBooks.getTotalElements());
+//        response.put("keyword", keyword);
+//        response.put("currentSize", size);
+//        response.put("currentPage", page);
+//        return ResponseEntity.ok(borrowedBooks);
+//    }
+    @GetMapping("/user/{userId}/borrows")
+    public ResponseEntity<?> getBorrowsByUser(@PathVariable UUID userId,
+                                              @RequestParam(name = "keyword", defaultValue = "") String keyword,
+                                              @RequestParam (name = "page", defaultValue = "0") int page,
+                                              @RequestParam(name = "size", defaultValue = "10") int size) {
+        Page<Borrow> borrows = bookService.getAllBorrowsByUserId(userId, keyword, page, size);
+        Map<String, Object> response = new HashMap<>();
+        response.put("borrows", borrows.getContent());
+        response.put("pagination", generatePagination.pagination(page));
+        response.put("totalPages", borrows.getTotalPages());
+        response.put("totalElements", borrows.getTotalElements());
+        response.put("keyword", keyword);
+        response.put("currentSize", size);
+        response.put("currentPage", page);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/books/{bookId}/borrows")
+    public ResponseEntity<?> getBorrowsByBook(@PathVariable Long bookId,
+                                              @RequestParam(name = "keyword", defaultValue = "") String keyword,
+                                              @RequestParam (name = "page", defaultValue = "0") int page,
+                                              @RequestParam(name = "size", defaultValue = "10") int size) {
+        Page<Borrow> borrows = bookService.getAllBorrowsByBookId(bookId, keyword, page, size);
+        Map<String, Object> response = new HashMap<>();
+        response.put("borrows", borrows.getContent());
+        response.put("pagination", generatePagination.pagination(page));
+        response.put("totalPages", borrows.getTotalPages());
+        response.put("totalElements", borrows.getTotalElements());
+        response.put("keyword", keyword);
+        response.put("currentSize", size);
+        response.put("currentPage", page);
+        return ResponseEntity.ok(response);
+    }
+
+    //    @GetMapping("/borrowed/{username}")
+//    public ResponseEntity<?> getAllBorrowedBooksByUsername(@PathVariable("username") String username,
+//                                                           @RequestParam(name = "keyword", defaultValue = "") String keyword,
+//                                                           @RequestParam(name = "page", defaultValue = "0") int page,
+//                                                           @RequestParam(name = "size", defaultValue = "10") int size) {
+//        Page<Borrow> borrowedBooks = bookService.getAllBorrowedByUser(username, page, size);
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("borrows", borrowedBooks.getContent());
+//        response.put("pagination", generatePagination.pagination(page));
+//        response.put("totalPages", borrowedBooks.getTotalPages());
+//        response.put("totalElements", borrowedBooks.getTotalElements());
+//        response.put("keyword", keyword);
+//        response.put("currentSize", size);
+//        response.put("currentPage", page);
+//        return ResponseEntity.ok(response);
+//    }
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> saveBook(@Valid @RequestBody Book book, BindingResult bindingResult) {
@@ -109,12 +196,14 @@ public class BookController {
         bookService.returnBook(id);
         return ResponseEntity.noContent().build();
     }
-
     @GetMapping("/borrow/{id}")
     public ResponseEntity<?> borrow(@PathVariable("id") Long id,
                                     @RequestParam(name = "date", defaultValue = "") String date) {
         String error = "";
+
+        // Kiểm tra nếu sách đã được mượn nhưng chưa được trả lại
         if (!bookService.checkIfAlreadyBorrowed(id)) {
+            // Nếu sách chưa được mượn hoặc đã trả, thì cho phép mượn sách
             if (bookService.checkBookQuantity(id)) {
                 if (bookService.borrowBook(id, date)) {
                     return ResponseEntity.noContent().build();
@@ -125,10 +214,13 @@ public class BookController {
                 error = "There are no books left.";
             }
         } else {
-            error = "You have already borrowed this book.";
+            error = "You have already borrowed this book and have not returned it.";
         }
+
         return ResponseEntity.badRequest().body(error);
     }
+
+
 
     @GetMapping("/borrow-book/{id}")
     public ResponseEntity<?> borrowBook(@PathVariable("id") Long id) {

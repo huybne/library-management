@@ -3,13 +3,16 @@ package com.ensas.librarymanagementsystem.serviceImpl;
 
 import com.ensas.librarymanagementsystem.Model.security.Authority;
 import com.ensas.librarymanagementsystem.Model.security.Role;
+import com.ensas.librarymanagementsystem.Model.security.User;
 import com.ensas.librarymanagementsystem.dto.request.AddAuthoritiesToRole;
+import com.ensas.librarymanagementsystem.dto.request.AddRoleToUser;
 import com.ensas.librarymanagementsystem.dto.request.RoleRequest;
 import com.ensas.librarymanagementsystem.dto.response.RoleResponse;
 import com.ensas.librarymanagementsystem.exceptions.NotFoundException;
 import com.ensas.librarymanagementsystem.mapper.RoleMapper;
 import com.ensas.librarymanagementsystem.repositories.AuthorityRepository;
 import com.ensas.librarymanagementsystem.repositories.RoleRepository;
+import com.ensas.librarymanagementsystem.repositories.UserRepository;
 import com.ensas.librarymanagementsystem.service.RoleService;
 import io.micrometer.common.util.StringUtils;
 import lombok.AccessLevel;
@@ -29,6 +32,7 @@ public class RoleServiceImpl implements RoleService {
     RoleRepository roleRepository;
     RoleMapper roleMapper;
     AuthorityRepository authorityRepository;
+    private final UserRepository userRepository;
 
     @Override
     public RoleResponse create(RoleRequest request) {
@@ -122,6 +126,31 @@ public class RoleServiceImpl implements RoleService {
         }
 
         return roleMapper.toRoleResponse(role);
+    }
+    
+    @Override
+    public RoleResponse addRoleToUser(AddRoleToUser request) {
+        String roleName = request.getRoleName();
+        Optional<Role> role = roleRepository.findByName(roleName);
+
+        if (!role.isPresent()) {
+            throw new NotFoundException("Role not found");
+        }
+
+        Optional<User> user = userRepository.findById(request.getUserId());
+
+        if (!user.isPresent()) {
+            throw new NotFoundException("User not found");
+        }
+
+        // Thêm role vào user
+        User existingUser = user.get();
+        existingUser.getRoles().add(role.get());
+
+        // Lưu thay đổi vào database (nếu cần thiết)
+        userRepository.save(existingUser);
+
+        return roleMapper.toRoleResponse(role.get());
     }
 
 }

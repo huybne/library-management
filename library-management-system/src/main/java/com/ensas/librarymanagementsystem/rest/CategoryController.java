@@ -25,6 +25,7 @@ public class CategoryController {
     private final GeneratePagination generatePagination;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getCategories(@RequestParam(name = "keyword",defaultValue = "") String keyword,
                                            @RequestParam(name = "page",defaultValue = "0") int page,
                                            @RequestParam(name = "size",defaultValue = "5") int size) {
@@ -46,11 +47,13 @@ public class CategoryController {
         return ResponseEntity.ok(category);
     }
     @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteCategory(@PathVariable("id") Long id,
                                             @RequestParam(name = "keyword",defaultValue = "") String keyword,
                                             @RequestParam(name = "page",defaultValue = "0") int page,
@@ -60,6 +63,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}/books")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getCategoryBooks(@PathVariable("id") Long id,
                                               @RequestParam(name = "keyword",defaultValue = "") String keyword,
                                               @RequestParam(name = "page",defaultValue = "0") int page,
@@ -77,12 +81,14 @@ public class CategoryController {
     }
 
     @GetMapping("/update-category/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> getCategoryDetails(@PathVariable("id") Long id) {
         Category category = categoryService.getCategory(id);
         return ResponseEntity.ok(category);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> saveCategory(@Valid @RequestBody Category category, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
@@ -92,11 +98,13 @@ public class CategoryController {
     }
 
     @GetMapping("/add-category")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<?> addCategory() {
         return ResponseEntity.ok(new Category());
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateCategory(@PathVariable("id") Long id,
                                             @Valid @RequestBody Category category,
                                             BindingResult bindingResult) {

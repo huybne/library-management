@@ -1,6 +1,7 @@
 package com.ensas.librarymanagementsystem.rest;
 
 import com.ensas.librarymanagementsystem.dto.request.AddAuthoritiesToRole;
+import com.ensas.librarymanagementsystem.dto.request.AddRoleToUser;
 import com.ensas.librarymanagementsystem.dto.request.RoleRequest;
 import com.ensas.librarymanagementsystem.dto.response.RoleResponse;
 import com.ensas.librarymanagementsystem.service.RoleService;
@@ -79,6 +80,18 @@ public class RoleController {
         } catch (Exception e) {
             log.error("Error fetching role by name {}: {}", roleName, e.getMessage(), e);
             return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @PutMapping("grant-role")
+    public ResponseEntity<?> grantRole(@RequestBody AddRoleToUser roleRequest) {
+        try {
+            RoleResponse response = roleService.addRoleToUser(roleRequest);
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e) {
+            log.error("Error adding role to user: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 }
